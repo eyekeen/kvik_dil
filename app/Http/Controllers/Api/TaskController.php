@@ -14,7 +14,9 @@ use App\Contract\TaskRepositoryInterface;
 class TaskController extends Controller
 {
 
-    public function __construct(private TaskRepositoryInterface $repository){}
+    public function __construct(private TaskRepositoryInterface $repository)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -31,17 +33,10 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // TODO: validation not work
     public function store(StoreTaskRequest $request)
     {
-        $request->validated();
-
-        $task = Task::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'status' => $request->status,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-        ]);
+        $task = Task::create($request->all());
 
         return [
             'msg' => 'task created',
@@ -58,7 +53,7 @@ class TaskController extends Controller
             return new TaskResource(Task::findOrFail($id));
         } catch (ModelNotFoundException $e) {
             return response()->json([
-                'message' => 'Record not found.'
+                'msg' => 'Задача не найдена.'
             ], 404);
         }
     }
@@ -68,14 +63,18 @@ class TaskController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $task = Task::where('id', $id);
-
+        
         try {
+            $task = Task::findOrFail($id);
             $task->update($request->all());
-            return "updated";
-        } catch (\Exception $e) {
+
             return response()->json([
-                'message' => $e->getMessage(),
+                'msg' => 'Задача Обновлена',
+                'task' => $task,
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'msg' => 'Задача не найдена',
             ]);
         }
     }
@@ -85,15 +84,17 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
-        if ($task = Task::find($id)) {
+        try {
+            $task = Task::findOrFail($id);
             $task->delete();
 
             return response()->json([
-                'msg' => 'task deleted',
+                'msg' => 'Задача удалена',
+                'task' => $task,
             ]);
-        } else {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
-                'msg' => 'task not found',
+                'msg' => 'Задача не найдена',
             ]);
         }
     }
