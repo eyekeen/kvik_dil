@@ -36,11 +36,7 @@ class TaskController extends Controller
     public function store(StoreTaskRequest $request): JsonResponse
     {
 
-        if (!$request->validated()) {
-            return response()->json([
-                'msg' => 'Ошибка валидации',
-            ], 403);
-        }
+        // $request->validated();
 
         $task = Task::create($request->all());
 

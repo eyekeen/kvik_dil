@@ -31,19 +31,14 @@ php artisan serve
 
 # API
 
-1. GET | HEAD /api/tasks <br>
-Возвращает список задач из базы данных, применяя опциональные фильтры на основе указанных GET параметров. Принимает три параметра фильтрации: status, start_date и end_date <br><br>
-Response: <br>
-    - 200 ok
-    - 404 not found
-
-1. POST /api/tasks <br>
-Создает задачу в базе данных. Принимает след POST параметры: status, start_date и end_date <br><br>
-Response: <br>
-    - 200 ok
-    - 404 not found
-- POST /api/tasks
-- GET | HEAD /api/tasks/{id}
+- GET | HEAD /api/tasks<br>
+Возвращает список задач из базы данных, применяя опциональные фильтры на основе указанных GET параметров. Принимает три параметра фильтрации: status, start_date и end_date
+- POST /api/tasks<br>
+Создает задачу в базе данных. Принимает след. POST параметры: name, description, status, start_date и end_date. Все параметры кроме name опциональные
+- GET | HEAD /api/tasks/{id}<br>
+Возвращает задачу с переданным id или код 404 если её не существуюет
 - PUT | PATCH /api/tasks/{id}
+Обноляет задачу с переданным id или код 404 если её не существуюет
 - DELETE /api/tasks/{id}
+Удаляет задачу с переданным id или код 404 если её не существуюет
 

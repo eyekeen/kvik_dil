@@ -15,4 +15,5 @@ use App\Http\Controllers\Api\TaskController;
 |
 */
 
+Route::post('/tasks', [TaskController::class, 'store']);
 Route::apiResource('/tasks', TaskController::class);
