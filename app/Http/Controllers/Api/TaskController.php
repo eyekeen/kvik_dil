@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Http\Resources\TaskCollection;
 use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Contract\TaskRepositoryInterface;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class TaskController extends Controller
 {
@@ -18,71 +19,78 @@ class TaskController extends Controller
     {
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+
+    public function index(Request $request): JsonResource
     {
         if ($request->get('start_date') || $request->get('end_date') || $request->get('status')) {
-            return $this->repository->filter($request->all());
+            $tasks = $this->repository->filter($request->all());
+        } else {
+            $tasks = Task::all();
         }
 
-        return new TaskCollection(Task::all());
+        return TaskResource::collection($tasks);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     // TODO: validation not work
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request): JsonResponse
     {
+
+        if (!$request->validated()) {
+            return response()->json([
+                'msg' => 'Ошибка валидации',
+            ], 403);
+        }
+
         $task = Task::create($request->all());
 
-        return [
-            'msg' => 'task created',
-            'task' => $task,
-        ];
+        return response()->json([
+            'msg' => 'Задача создана',
+            'task' => $task
+        ], 200);
+
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+
+    public function show(string $id): JsonResource|JsonResponse
     {
         try {
-            return new TaskResource(Task::findOrFail($id));
+            $task = Task::findOrFail($id);
+
+            return new TaskResource($task);
         } catch (ModelNotFoundException $e) {
             return response()->json([
-                'msg' => 'Задача не найдена.'
+                'msg' => 'Задача не найдена',
             ], 404);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+    public function update(Request $request, string $id): JsonResponse
     {
-        
+
         try {
             $task = Task::findOrFail($id);
-            $task->update($request->all());
+
+            if (!$task->update($request->all())) {
+                return response()->json([
+                    'msg' => 'Ошибка на сервере',
+                ], 500);
+            }
 
             return response()->json([
-                'msg' => 'Задача Обновлена',
+                'msg' => 'Задача обновлена',
                 'task' => $task,
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'msg' => 'Задача не найдена',
-            ]);
+            ], 404);
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+
+    public function destroy(string $id): JsonResponse
     {
         try {
             $task = Task::findOrFail($id);
@@ -95,7 +103,11 @@ class TaskController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'msg' => 'Задача не найдена',
-            ]);
+            ], 404);
+        } catch (\LogicException $e) {
+            return response()->json([
+                'msg' => 'Ошибка на сервере',
+            ], 500);
         }
     }
 }
